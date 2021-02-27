@@ -2,7 +2,6 @@ import asyncio
 import curses
 import logging
 import pathlib
-
 import patterns
 
 logging.basicConfig(filename="view.log", level=logging.DEBUG)
