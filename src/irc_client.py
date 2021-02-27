@@ -1,27 +1,14 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
-#
-# Copyright © 2021
-#
-# Distributed under terms of the MIT license.
-
-"""
-Description:
-
-"""
 import asyncio
 import logging
 
 import patterns
 import view
 
-logging.basicConfig(filename='view.log', level=logging.DEBUG)
+logging.basicConfig(filename="view.log", level=logging.DEBUG)
 logger = logging.getLogger()
 
 
 class IRCClient(patterns.Subscriber):
-
     def __init__(self):
         super().__init__()
         self.username = str()
@@ -43,7 +30,7 @@ class IRCClient(patterns.Subscriber):
     def process_input(self, msg):
         # Will need to modify this
         self.add_msg(msg)
-        if msg.lower().startswith('/quit'):
+        if msg.lower().startswith("/quit"):
             # Command that leads to the closure of the process
             raise KeyboardInterrupt
 
@@ -65,7 +52,6 @@ class IRCClient(patterns.Subscriber):
         pass
 
 
-
 def main(args):
     # Pass your arguments where necessary
     client = IRCClient()
@@ -76,17 +62,20 @@ def main(args):
         logger.debug(f"Passed View object to IRC Client")
         v.add_subscriber(client)
         logger.debug(f"IRC Client is subscribed to the View (to receive user input)")
+
         async def inner_run():
             await asyncio.gather(
                 v.run(),
                 client.run(),
                 return_exceptions=True,
             )
+
         try:
-            asyncio.run( inner_run() )
+            asyncio.run(inner_run())
         except KeyboardInterrupt as e:
             logger.debug(f"Signifies end of process")
     client.close()
+
 
 if __name__ == "__main__":
     # Parse your command line arguments here

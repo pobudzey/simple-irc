@@ -1,19 +1,7 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
-#
-# Copyright © 2021
-#
-# Distributed under terms of the MIT license.
-
-"""
-Description:
-
-"""
 import abc
 
-class Publisher:
 
+class Publisher:
     def __init__(self):
         self.subscribers = list()
 
@@ -29,11 +17,11 @@ class Publisher:
 
     def notify(self, msg):
         for s in self.subscribers:
-            if hasattr(s, 'update'):
+            if hasattr(s, "update"):
                 s.update(msg)
 
-class Subscriber:
 
+class Subscriber:
     @abc.abstractmethod
     def update(self, msg):
         pass
