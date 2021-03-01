@@ -2,6 +2,7 @@ import asyncio
 import logging
 import patterns
 import view
+import socket
 
 logging.basicConfig(filename="view.log", level=logging.DEBUG)
 logger = logging.getLogger()
@@ -12,6 +13,8 @@ class IRCClient(patterns.Subscriber):
         super().__init__()
         self.username = str()
         self._run = True
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect(("192.168.4.116", 50007))
 
     def set_view(self, view):
         self.view = view
@@ -36,14 +39,20 @@ class IRCClient(patterns.Subscriber):
     def add_msg(self, msg):
         self.view.add_msg(self.username, msg)
 
+    def send(self, msg):
+        message = msg.encode("utf-8")
+        msg_length = len(message)
+        send_length = str(msg_length).encode("utf-8")
+        send_length += b" " * (64 - len(send_length))
+        self.socket.send(send_length)
+        self.socket.send(message)
+
     async def run(self):
-        """
-        Driver of your IRC Client
-        """
-        # Remove this section in your code, simply for illustration purposes
-        for x in range(10):
-            self.add_msg(f"call after View.loop: {x}")
-            await asyncio.sleep(2)
+        self.send("Hello!")
+        await asyncio.sleep(2)
+        self.send("Hello again!")
+        await asyncio.sleep(2)
+        self.send("QUIT")
 
     def close(self):
         # Terminate connection
