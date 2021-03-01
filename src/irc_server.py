@@ -8,24 +8,49 @@ logging.basicConfig(filename="server.log", level=logging.DEBUG)
 logger = logging.getLogger()
 
 
-class IRCServer(patterns.Publisher):
+class IRCServer:
     def __init__(self, host="192.168.4.116", port=50007):
-        super().__init__()
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.host, self.port))
-        self.socket.settimeout(5)
+        self.socket.settimeout(2)
+        self.subscribers = []
+
+    def add_subscriber(self, conn):
+        self.subscribers.append(conn)
+
+    def rm_subscriber(self, conn):
+        try:
+            self.subscribers.remove(conn)
+        except ValueError:
+            pass
+
+    def notify(self, msg):
+        for s in self.subscribers:
+            self.update(s, msg)
+
+    def update(self, conn, msg):
+        message = msg.encode("utf-8")
+        msg_length = len(message)
+        send_length = str(msg_length).encode("utf-8")
+        send_length += b" " * (64 - len(send_length))
+        conn.send(send_length)
+        conn.send(message)
 
     def handle_client(self, conn, addr):
         print(f"[CONNECTION] Client {addr} has connected.")
+        self.add_subscriber(conn)
         connected = True
         while connected:
             msg_length = int(conn.recv(64).decode("utf-8"))
             msg = conn.recv(msg_length).decode("utf-8")
             if msg == "QUIT":
                 connected = False
-            print(f"[SENT BY CLIENT] {msg}")
+            else:
+                # Notify all client connections
+                self.notify(msg)
+        self.rm_subscriber(conn)
         print(f"[DISCONNECTION] Client {addr} has disconnected.")
         conn.close()
 
@@ -48,7 +73,7 @@ def main(args):
     server = IRCServer()
     try:
         server.start()
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         logger.debug("Signifies end of process")
 
 

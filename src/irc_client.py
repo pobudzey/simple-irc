@@ -3,6 +3,7 @@ import logging
 import patterns
 import view
 import socket
+import threading
 
 logging.basicConfig(filename="client.log", level=logging.DEBUG)
 logger = logging.getLogger()
@@ -15,6 +16,7 @@ class IRCClient(patterns.Subscriber):
         self._run = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("192.168.4.116", 50007))
+        self.socket.settimeout(0.5)
 
     def set_view(self, view):
         self.view = view
@@ -31,10 +33,13 @@ class IRCClient(patterns.Subscriber):
 
     def process_input(self, msg):
         # Will need to modify this
-        self.add_msg(msg)
+        # self.add_msg(msg)
         if msg.lower().startswith("/quit"):
             # Command that leads to the closure of the process
+            self.send("QUIT")
             raise KeyboardInterrupt
+        else:
+            self.send(msg)
 
     def add_msg(self, msg):
         self.view.add_msg(self.username, msg)
@@ -47,12 +52,38 @@ class IRCClient(patterns.Subscriber):
         self.socket.send(send_length)
         self.socket.send(message)
 
-    async def run(self):
-        self.send("Hello!")
-        await asyncio.sleep(2)
-        self.send("Hello again!")
-        await asyncio.sleep(2)
-        self.send("QUIT")
+    def run(self):
+        # self.send("Hello!")
+        # await asyncio.sleep(2)
+        # self.send("Hello again!")
+        # await asyncio.sleep(2)
+        while True:
+            try:
+                msg_length = self.socket.recv(64).decode("utf-8")
+            except socket.timeout as e:
+                print("recv timed out, retry later")
+                # await asyncio.sleep(0.05)
+                continue
+            else:
+                if msg_length:
+                    msg_length = int(msg_length)
+                    ##
+                    msg_not_received = True
+                    while msg_not_received:
+                        try:
+                            msg = self.socket.recv(msg_length).decode("utf-8")
+                        except socket.timeout as e:
+                            print("recv timed out, retry later")
+                            # await asyncio.sleep(0.05)
+                            continue
+                        else:
+                            msg_not_received = False
+                    ##
+                    self.add_msg(msg)
+                    # await asyncio.sleep(0.05)
+                else:
+                    # Client connection closed on server end
+                    break
 
     def close(self):
         # Terminate connection
@@ -74,11 +105,12 @@ def main(args):
         async def inner_run():
             await asyncio.gather(
                 v.run(),
-                client.run(),
+                # client.run(),
                 return_exceptions=True,
             )
 
         try:
+            threading.Thread(target=client.run).start()
             asyncio.run(inner_run())
         except KeyboardInterrupt as e:
             logger.debug(f"Signifies end of process")
