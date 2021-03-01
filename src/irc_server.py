@@ -1,6 +1,4 @@
-import asyncio
 import logging
-import patterns
 import socket
 import threading
 
@@ -61,8 +59,7 @@ class IRCServer:
         while True:
             try:
                 conn, addr = self.socket.accept()
-                thread = threading.Thread(target=self.handle_client, args=(conn, addr))
-                thread.start()
+                threading.Thread(target=self.handle_client, args=(conn, addr)).start()
             except socket.timeout:
                 continue
             except KeyboardInterrupt:

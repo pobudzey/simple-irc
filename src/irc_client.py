@@ -32,8 +32,6 @@ class IRCClient(patterns.Subscriber):
         self.process_input(msg)
 
     def process_input(self, msg):
-        # Will need to modify this
-        # self.add_msg(msg)
         if msg.lower().startswith("/quit"):
             # Command that leads to the closure of the process
             self.send("QUIT")
@@ -53,36 +51,25 @@ class IRCClient(patterns.Subscriber):
         self.socket.send(message)
 
     def run(self):
-        # self.send("Hello!")
-        # await asyncio.sleep(2)
-        # self.send("Hello again!")
-        # await asyncio.sleep(2)
         while True:
             try:
                 msg_length = self.socket.recv(64).decode("utf-8")
-            except socket.timeout as e:
-                print("recv timed out, retry later")
-                # await asyncio.sleep(0.05)
+            except socket.timeout:
                 continue
             else:
                 if msg_length:
                     msg_length = int(msg_length)
-                    ##
                     msg_not_received = True
                     while msg_not_received:
                         try:
                             msg = self.socket.recv(msg_length).decode("utf-8")
-                        except socket.timeout as e:
-                            print("recv timed out, retry later")
-                            # await asyncio.sleep(0.05)
+                        except socket.timeout:
                             continue
                         else:
                             msg_not_received = False
-                    ##
                     self.add_msg(msg)
-                    # await asyncio.sleep(0.05)
                 else:
-                    # Client connection closed on server end
+                    # Client connection gracefully closed on server end
                     break
 
     def close(self):
@@ -105,14 +92,13 @@ def main(args):
         async def inner_run():
             await asyncio.gather(
                 v.run(),
-                # client.run(),
                 return_exceptions=True,
             )
 
         try:
             threading.Thread(target=client.run).start()
             asyncio.run(inner_run())
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             logger.debug(f"Signifies end of process")
     client.close()
 
