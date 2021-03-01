@@ -4,7 +4,7 @@ import logging
 import pathlib
 import patterns
 
-logging.basicConfig(filename="view.log", level=logging.DEBUG)
+logging.basicConfig(filename="client.log", level=logging.DEBUG)
 logger = logging.getLogger()
 
 
