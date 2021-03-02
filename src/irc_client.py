@@ -4,6 +4,7 @@ import patterns
 import view
 import socket
 import threading
+import time
 
 logging.basicConfig(filename="client.log", level=logging.DEBUG)
 logger = logging.getLogger()
@@ -57,8 +58,8 @@ class IRCClient(patterns.Subscriber):
             else:
                 pass
 
-    def add_msg(self, msg):
-        self.view.add_msg(self.nickname, msg)
+    def add_msg(self, nickname, msg):
+        self.view.put_msg(f"{time.strftime('%H:%M')} [{nickname}] {msg}\n")
 
     def send(self, msg):
         message = msg.encode("utf-8")
@@ -89,15 +90,21 @@ class IRCClient(patterns.Subscriber):
                         self.view.put_msg(msg.split(":")[1] + "\n")
                         self.registered = True
                         self.nickname = msg.split()[1]
+                        self.send("JOIN #global")
                     elif msg.startswith("433"):
                         self.view.put_msg(
                             f"Error: Nickname {msg.split()[2]} already in use. Please try another one.\n"
                         )
+                    elif msg.split()[1] == "JOIN":
+                        nickname = msg.split()[0][1:]
+                        self.add_msg(nickname, "has joined #global.")
+                        # self.view.put_msg(f"INFO: {nickname} has joined #global.\n")
                     else:
                         # Regular PRIVMSG to #global
                         username = msg.split()[0][1:]
-                        msg = msg.split()[-1][1:]
-                        self.view.add_msg(username, msg)
+                        msg = msg[1:].split(":")[1]
+                        # self.view.add_msg(username, msg)
+                        self.add_msg(username, msg)
                 else:
                     # Client connection gracefully closed on server end
                     break

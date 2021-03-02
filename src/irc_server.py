@@ -65,6 +65,8 @@ class IRCServer:
                     self.add_subscriber(conn)
                 else:
                     self.update(conn, f"433 * {nickname} :Nickname is already in use.")
+            elif msg.startswith("JOIN"):
+                self.notify(f":{client_nickname} {msg}")
             else:
                 # Notify all client connections (regular PRIVMSG command)
                 self.notify(f":{client_nickname} {msg}")
