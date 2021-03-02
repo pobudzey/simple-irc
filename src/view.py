@@ -67,6 +67,9 @@ class View(patterns.Publisher):
         self.msg_win.scrollok(True)
         self.msg_win.refresh()
         self._welcome_banner()
+        self.put_msg(
+            "Welcome! Please register yourself with the server by using the command /register [nickname].\nTo quit, simply type /quit.\n"
+        )
 
     def _welcome_banner(self):
         banner_file = pathlib.Path("banner.txt")

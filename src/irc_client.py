@@ -12,11 +12,12 @@ logger = logging.getLogger()
 class IRCClient(patterns.Subscriber):
     def __init__(self):
         super().__init__()
-        self.username = str()
         self._run = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("192.168.4.116", 50007))
         self.socket.settimeout(0.5)
+        self.registered = False
+        self.nickname = str()
 
     def set_view(self, view):
         self.view = view
@@ -32,15 +33,33 @@ class IRCClient(patterns.Subscriber):
         self.process_input(msg)
 
     def process_input(self, msg):
-        if msg.lower().startswith("/quit"):
-            # Command that leads to the closure of the process
-            self.send("QUIT")
-            raise KeyboardInterrupt
+        if self.registered:
+            if msg.lower().startswith("/quit"):
+                # Command that leads to the closure of the process
+                self.send("QUIT")
+                raise KeyboardInterrupt
+            else:
+                self.send(msg)
         else:
-            self.send(msg)
+            if msg.lower() == "/quit":
+                self.send("QUIT")
+                raise KeyboardInterrupt
+            elif msg.lower().startswith("/register"):
+                if len(msg.split()) != 2:
+                    self.view.put_msg("Error: incorrect command syntax.\n")
+                else:
+                    nick = msg.split()[1]
+                    if len(nick) > 9:
+                        self.view.put_msg(
+                            "Error: nickname must have a maximum length of 9 characters.\n"
+                        )
+                    else:
+                        self.send(f"NICK {nick}")
+            else:
+                pass
 
     def add_msg(self, msg):
-        self.view.add_msg(self.username, msg)
+        self.view.add_msg(self.nickname, msg)
 
     def send(self, msg):
         message = msg.encode("utf-8")
@@ -67,7 +86,16 @@ class IRCClient(patterns.Subscriber):
                             continue
                         else:
                             msg_not_received = False
-                    self.add_msg(msg)
+                    if msg.startswith("001"):
+                        self.view.put_msg(msg.split(":")[1] + "\n")
+                        self.registered = True
+                        self.nickname = msg.split()[1]
+                    elif msg.startswith("433"):
+                        self.view.put_msg(
+                            f"Error: Nickname {msg.split()[2]} already in use. Please try another one.\n"
+                        )
+                    else:
+                        self.add_msg(msg)
                 else:
                     # Client connection gracefully closed on server end
                     break

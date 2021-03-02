@@ -14,6 +14,7 @@ class IRCServer:
         self.socket.bind((self.host, self.port))
         self.socket.settimeout(2)
         self.subscribers = []
+        self.nicknames = []
 
     def add_subscriber(self, conn):
         self.subscribers.append(conn)
@@ -21,6 +22,12 @@ class IRCServer:
     def rm_subscriber(self, conn):
         try:
             self.subscribers.remove(conn)
+        except ValueError:
+            pass
+
+    def rm_nickname(self, nickname):
+        try:
+            self.nicknames.remove(nickname)
         except ValueError:
             pass
 
@@ -38,16 +45,30 @@ class IRCServer:
 
     def handle_client(self, conn, addr):
         print(f"[CONNECTION] Client {addr} has connected.")
-        self.add_subscriber(conn)
+        # self.add_subscriber(conn)
         connected = True
+        client_nickname = str()
         while connected:
             msg_length = int(conn.recv(64).decode("utf-8"))
             msg = conn.recv(msg_length).decode("utf-8")
             if msg == "QUIT":
                 connected = False
+            elif msg.startswith("NICK"):
+                nickname = msg.split()[1]
+                if nickname not in self.nicknames:
+                    client_nickname = nickname
+                    self.nicknames.append(client_nickname)
+                    self.update(
+                        conn,
+                        f"001 {client_nickname} :Welcome to the Internet Relay Network {client_nickname}!",
+                    )
+                    self.add_subscriber(conn)
+                else:
+                    self.update(conn, f"433 * {nickname} :Nickname is already in use.")
             else:
-                # Notify all client connections
+                # Notify all client connections (regular PRIVMSG command)
                 self.notify(msg)
+        self.rm_nickname(client_nickname)
         self.rm_subscriber(conn)
         print(f"[DISCONNECTION] Client {addr} has disconnected.")
         conn.close()
