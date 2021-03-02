@@ -36,6 +36,7 @@ class IRCClient(patterns.Subscriber):
     def process_input(self, msg):
         if self.registered:
             if msg.lower() == "/quit":
+                self.send("PART #global")
                 self.send("QUIT")
                 raise KeyboardInterrupt
             else:
@@ -98,12 +99,13 @@ class IRCClient(patterns.Subscriber):
                     elif msg.split()[1] == "JOIN":
                         nickname = msg.split()[0][1:]
                         self.add_msg(nickname, "has joined #global.")
-                        # self.view.put_msg(f"INFO: {nickname} has joined #global.\n")
+                    elif msg.split()[1] == "PART":
+                        nickname = msg.split()[0][1:]
+                        self.add_msg(nickname, "has left #global.")
                     else:
                         # Regular PRIVMSG to #global
                         username = msg.split()[0][1:]
                         msg = msg[1:].split(":")[1]
-                        # self.view.add_msg(username, msg)
                         self.add_msg(username, msg)
                 else:
                     # Client connection gracefully closed on server end

@@ -45,7 +45,6 @@ class IRCServer:
 
     def handle_client(self, conn, addr):
         print(f"[CONNECTION] Client {addr} has connected.")
-        # self.add_subscriber(conn)
         connected = True
         client_nickname = str()
         while connected:
@@ -62,10 +61,12 @@ class IRCServer:
                         conn,
                         f"001 {client_nickname} :Welcome to the Internet Relay Network {client_nickname}!",
                     )
-                    self.add_subscriber(conn)
                 else:
                     self.update(conn, f"433 * {nickname} :Nickname is already in use.")
             elif msg.startswith("JOIN"):
+                self.add_subscriber(conn)
+                self.notify(f":{client_nickname} {msg}")
+            elif msg.startswith("PART"):
                 self.notify(f":{client_nickname} {msg}")
             else:
                 # Notify all client connections (regular PRIVMSG command)
