@@ -5,6 +5,7 @@ import view
 import socket
 import threading
 import time
+import getpass
 
 logging.basicConfig(filename="client.log", level=logging.DEBUG)
 logger = logging.getLogger()
@@ -19,6 +20,7 @@ class IRCClient(patterns.Subscriber):
         self.socket.settimeout(0.5)
         self.registered = False
         self.nickname = str()
+        self.username = getpass.getuser()
 
     def set_view(self, view):
         self.view = view
@@ -56,6 +58,7 @@ class IRCClient(patterns.Subscriber):
                         )
                     else:
                         self.send(f"NICK {nick}")
+                        self.send(f"USER {self.username} * * :realname")
             else:
                 pass
 
@@ -104,9 +107,9 @@ class IRCClient(patterns.Subscriber):
                         self.add_msg(nickname, "has left #global.")
                     else:
                         # Regular PRIVMSG to #global
-                        username = msg.split()[0][1:]
+                        nickname = msg.split()[0][1:]
                         msg = msg[1:].split(":")[1]
-                        self.add_msg(username, msg)
+                        self.add_msg(nickname, msg)
                 else:
                     # Client connection gracefully closed on server end
                     break

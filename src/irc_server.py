@@ -53,6 +53,9 @@ class IRCServer:
             if msg == "QUIT":
                 connected = False
             elif msg.startswith("NICK"):
+                # Next message should be a USER command
+                ml = int(conn.recv(64).decode("utf-8"))
+                user_msg = conn.recv(ml).decode("utf-8")
                 nickname = msg.split()[1]
                 if nickname not in self.nicknames:
                     client_nickname = nickname
