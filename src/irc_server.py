@@ -67,7 +67,7 @@ class IRCServer:
                     self.update(conn, f"433 * {nickname} :Nickname is already in use.")
             else:
                 # Notify all client connections (regular PRIVMSG command)
-                self.notify(msg)
+                self.notify(f":{client_nickname} {msg}")
         self.rm_nickname(client_nickname)
         self.rm_subscriber(conn)
         print(f"[DISCONNECTION] Client {addr} has disconnected.")

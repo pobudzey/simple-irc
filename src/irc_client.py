@@ -34,12 +34,11 @@ class IRCClient(patterns.Subscriber):
 
     def process_input(self, msg):
         if self.registered:
-            if msg.lower().startswith("/quit"):
-                # Command that leads to the closure of the process
+            if msg.lower() == "/quit":
                 self.send("QUIT")
                 raise KeyboardInterrupt
             else:
-                self.send(msg)
+                self.send(f"PRIVMSG #global :{msg}")
         else:
             if msg.lower() == "/quit":
                 self.send("QUIT")
@@ -95,7 +94,10 @@ class IRCClient(patterns.Subscriber):
                             f"Error: Nickname {msg.split()[2]} already in use. Please try another one.\n"
                         )
                     else:
-                        self.add_msg(msg)
+                        # Regular PRIVMSG to #global
+                        username = msg.split()[0][1:]
+                        msg = msg.split()[-1][1:]
+                        self.view.add_msg(username, msg)
                 else:
                     # Client connection gracefully closed on server end
                     break
