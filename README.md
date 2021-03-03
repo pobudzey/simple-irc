@@ -11,5 +11,5 @@ A simple IRC client and server.
 `cd src`  
 `python irc_server.py --port <port>`
 
-3. Run the client
+3. Run the client  
 `python irc_client.py --host <host> --port <port>`  
