@@ -98,6 +98,7 @@ def main(args):
     try:
         server.start()
     except KeyboardInterrupt:
+        print("[STOPPING] Server is stopping...")
         logger.debug("Signifies end of process")
 
 
