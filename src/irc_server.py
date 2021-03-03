@@ -44,6 +44,7 @@ class IRCServer:
         send_length += b" " * (64 - len(send_length))
         conn.send(send_length)
         conn.send(message)
+        logger.info(f"IRCServer.send -> msg: {msg}")
 
     def handle_client(self, conn, addr):
         print(f"[CONNECTION] Client {addr} has connected.")
@@ -52,12 +53,14 @@ class IRCServer:
         while connected:
             msg_length = int(conn.recv(64).decode("utf-8"))
             msg = conn.recv(msg_length).decode("utf-8")
+            logger.info(f"IRCServer.recv -> msg: {msg}")
             if msg == "QUIT":
                 connected = False
             elif msg.startswith("NICK"):
                 # Next message should be a USER command
                 ml = int(conn.recv(64).decode("utf-8"))
                 user_msg = conn.recv(ml).decode("utf-8")
+                logger.info(f"IRCServer.recv -> msg: {user_msg}")
                 nickname = msg.split()[1]
                 if nickname not in self.nicknames:
                     client_nickname = nickname

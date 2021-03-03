@@ -73,6 +73,7 @@ class IRCClient(patterns.Subscriber):
         send_length += b" " * (64 - len(send_length))
         self.socket.send(send_length)
         self.socket.send(message)
+        logger.info(f"IRCClient.send -> msg: {msg}")
 
     def run(self):
         while True:
@@ -91,6 +92,7 @@ class IRCClient(patterns.Subscriber):
                             continue
                         else:
                             msg_not_received = False
+                    logger.info(f"IRCClient.recv -> msg: {msg}")
                     if msg.startswith("001"):
                         self.view.put_msg(msg.split(":")[1] + "\n")
                         self.registered = True
