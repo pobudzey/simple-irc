@@ -1,14 +1,16 @@
 import logging
 import socket
 import threading
+import click
 
 logging.basicConfig(filename="server.log", level=logging.DEBUG)
 logger = logging.getLogger()
 
 
 class IRCServer:
-    def __init__(self, host="192.168.4.116", port=50007):
-        self.host = host
+    def __init__(self, port):
+        # Need to use gethostbyname_ex() when host has multiple interfaces
+        self.host = socket.gethostbyname_ex(socket.gethostname())[2][1]
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.host, self.port))
@@ -82,7 +84,7 @@ class IRCServer:
     def start(self):
         print("[STARTING] Server is starting...")
         self.socket.listen()
-        print(f"[LISTENING] Server is listening on {self.host}")
+        print(f"[LISTENING] Server is listening on {self.host}:{self.port}")
         while True:
             try:
                 conn, addr = self.socket.accept()
@@ -93,8 +95,10 @@ class IRCServer:
                 raise
 
 
-def main(args):
-    server = IRCServer()
+@click.command()
+@click.option("--port", default=50007, help="Target port to use", show_default=True)
+def main(port):
+    server = IRCServer(port=port)
     try:
         server.start()
     except KeyboardInterrupt:
@@ -103,6 +107,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # Parse your command line arguments here
-    args = None
-    main(args)
+    main()

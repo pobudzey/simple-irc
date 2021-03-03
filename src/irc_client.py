@@ -6,17 +6,18 @@ import socket
 import threading
 import time
 import getpass
+import click
 
 logging.basicConfig(filename="client.log", level=logging.DEBUG)
 logger = logging.getLogger()
 
 
 class IRCClient(patterns.Subscriber):
-    def __init__(self):
+    def __init__(self, host, port):
         super().__init__()
         self._run = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(("192.168.4.116", 50007))
+        self.socket.connect((host, port))
         self.socket.settimeout(0.5)
         self.registered = False
         self.nickname = str()
@@ -120,9 +121,16 @@ class IRCClient(patterns.Subscriber):
         pass
 
 
-def main(args):
-    # Pass your arguments where necessary
-    client = IRCClient()
+@click.command()
+@click.option(
+    "--host",
+    required=True,
+    type=str,
+    help="Target server to initiate a connection to",
+)
+@click.option("--port", required=True, type=int, help="Target port to use")
+def main(host, port):
+    client = IRCClient(host=host, port=port)
     logger.info(f"Client object created")
     with view.View() as v:
         logger.info(f"Entered the context of a View object")
@@ -146,6 +154,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # Parse your command line arguments here
-    args = None
-    main(args)
+    main()
